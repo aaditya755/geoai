@@ -88,11 +88,13 @@ Priority tags: MUST / SHOULD / STRETCH
 - Exported file passes geojson-validation.
 - Features include confidence and measured_distance_m properties.
 
-### REQ-015 [MUST] Mistral planner — real call + fallback
-**EARS:** When MISTRAL_API_KEY is set, the system shall call the Mistral API to produce the plan JSON; when the key is absent or the call fails, the system shall fall back to a local rule-based planner.  
+### REQ-015 [MUST] OpenRouter planner — real call + fallback
+**EARS:** When OPENROUTER_API_KEY is set, the system shall call the OpenRouter API with the configured model to produce the plan JSON; when the key is absent or the call fails, the system shall fall back to a local rule-based planner.  
 **Acceptance criteria:**
-- Integration test with a real key returns a schema-valid plan.
-- Unit test with key unset exercises the fallback and also returns a schema-valid plan.
+- Integration test with a real key and configured model returns a schema-valid plan (`tests/test_llm_provider_live.py`, opt-in).
+- Unit test with key unset exercises the fallback and also returns a schema-valid plan (`tests/test_llm_provider.py`).
+- Provider response that fails local schema validation triggers fallback; invalid output is never returned.
+- API key never appears in the plan JSON, session history, or any response returned to the client.
 
 ### REQ-016 [MUST] Attribution page
 **EARS:** The UI shall include an accessible attribution page listing SpaceNet Buildings v1 (CC BY-SA 4.0, arXiv:1807.01232), OpenStreetMap contributors (ODbL), and SkyScript (arXiv:2312.12856).  

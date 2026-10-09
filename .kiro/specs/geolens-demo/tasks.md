@@ -77,13 +77,13 @@ Phase rule: each phase ends in a demo-able outcome with passing tests.
 
 **Demo-able outcome:** Follow-up query ("now within 50 m") amends previous plan; golden query tests pass; PROPOSED fields are inert when flags off.
 
-- [ ] **P4.1** Extend `planner_agent.py` — add Mistral API call with JSON schema validation; implement fallback rule-based planner (REQ-015). Adapter note: if existing function signatures differ, add one adapter function and list it in design.md.
+- [ ] **P4.1** Extend `planner_agent.py` — wire to `OpenRouterPlannerProvider` via `llm_provider.py` interface; implement fallback rule-based planner (REQ-015). The provider interface is in `llm_provider.py`; switching to another provider requires only implementing `LLMPlannerProvider` there.
 - [ ] **P4.2** Extend `planner_agent.py` — implement session store (in-memory dict keyed by session_id) for follow-up queries
 - [ ] **P4.3** Implement follow-up query amendment — planner receives previous plan + delta query; returns amended plan (see design.md §6.2)
 - [ ] **P4.4** Implement `negate` spatial operation behind `FEATURE_NEGATE` flag (REQ-010) — confirm no other code path depends on it
 - [ ] **P4.5** Implement `min_area_m2` filter behind `FEATURE_MIN_AREA` flag (REQ-026) — confirm no other code path depends on it
 - [ ] **P4.6** Add ~40 golden queries to `tests/golden_queries.json`; write `tests/test_planner_golden.py` (REQ-024)
-- [ ] **P4.7** [MANUAL] Obtain `MISTRAL_API_KEY`; run the integration test that makes one real Mistral call (REQ-015 integration path)
+- [ ] **P4.7** [MANUAL] Obtain `OPENROUTER_API_KEY`; set `OPENROUTER_RUN_LIVE_TESTS=true`; run `pytest tests/test_llm_provider_live.py -v -s`. Record model used, whether structured output was accepted, and the raw plan returned (REQ-015 live integration path).
 
 ---
 

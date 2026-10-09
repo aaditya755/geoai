@@ -205,7 +205,48 @@ Sarvam API unavailable ──► passthrough (query used as-is in English)
 
 ## 7. Adapters
 
-### 7.1 jev_ranker.py
+### 7.1 LLM provider — llm_provider.py
+
+**Interface:** `LLMPlannerProvider.generate_plan(messages, response_schema)`
+
+```python
+class LLMPlannerProvider(ABC):
+    def generate_plan(self, messages: list, response_schema: dict | None) -> str: ...
+    def provider_name(self) -> str: ...
+```
+
+**Current implementation:** `OpenRouterPlannerProvider`
+- Endpoint: `POST https://openrouter.ai/api/v1/chat/completions` (OpenAI-compatible)
+- Structured output: `response_format.type = "json_schema"`, `strict = true`
+- Provider routing: `require_parameters: true` to prevent silent fallback to endpoints that ignore `response_format`
+- Retries: bounded (default 2) on 429/5xx; no retry on 400/401/403/422
+- Timeout: configurable via `OPENROUTER_TIMEOUT_S` (default 30 s)
+- Local `validate_plan()` runs on every response regardless of structured output mode
+- Falls back to prompt-only JSON extraction if endpoint rejects `response_format`
+
+**Switching providers:** Implement `LLMPlannerProvider`, call `get_provider()` in `llm_provider.py`. `planner_agent.py` requires no changes.
+
+**Selected model:** `google/gemini-2.0-flash-001`
+- Confirmed structured output (`json_schema`) support via OpenRouter/Google endpoint
+- Good spatial/relational reasoning; strong JSON schema adherence
+- Low cost (~$0.10/$0.40 per 1M input/output tokens)
+- Stable versioned endpoint
+
+**Free alternative (development only):** `google/gemini-2.0-flash-exp:free`
+- Zero cost, rate-limited, structured output confirmed
+- Set via `OPENROUTER_MODEL=google/gemini-2.0-flash-exp:free`
+- Not recommended for evaluation or production; may be rate-limited
+
+**Configuration:**
+| Variable | Default | Purpose |
+|---|---|---|
+| `OPENROUTER_API_KEY` | — | Required for live inference |
+| `OPENROUTER_MODEL` | `google/gemini-2.0-flash-001` | Model identifier |
+| `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` | API base URL override |
+| `OPENROUTER_TIMEOUT_S` | `30` | Request timeout |
+| `OPENROUTER_MAX_RETRIES` | `2` | Max retries on transient errors |
+
+**Security:** API key is only placed in the `Authorization` header. It is never logged, never included in error messages returned to the client, and never serialised to the plan or session history.
 
 **Interface:**
 ```python

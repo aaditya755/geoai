@@ -1,0 +1,53 @@
+# GeoLens AI — Python dependencies
+# Pin exact versions once the environment is confirmed.
+# These are minimum tested versions; adjust per your environment.
+
+# Core geo stack
+geopandas>=0.14.0
+shapely>=2.0.0
+pyproj>=3.6.0
+fiona>=1.9.0
+rasterio>=1.3.0
+
+# OSM data
+osmnx>=1.9.0
+
+# ML / embeddings
+torch>=2.0.0
+numpy>=1.24.0
+Pillow>=10.0.0
+faiss-cpu>=1.7.4        # use faiss-gpu on GPU machines
+# openai/CLIP — install from GitHub:
+# pip install git+https://github.com/openai/CLIP.git
+# Alternatively load via HuggingFace transformers:
+transformers>=4.35.0
+
+# API backend
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+
+# Schema validation
+jsonschema>=4.20.0
+
+# Config / data
+pyyaml>=6.0.1
+pandas>=2.0.0
+pyarrow>=14.0.0         # for parquet support
+
+# Translation stub (Sarvam AI — endpoint unverified, see translate.py TODO)
+requests>=2.31.0
+
+# LLM Planner — OpenRouter (replaces Mistral)
+# OpenRouter uses the requests library (already listed above) — no extra package needed.
+# See llm_provider.py for the adapter implementation.
+# Previous dependency (mistralai) is removed; uninstall if present: pip uninstall mistralai
+
+# Dev / test
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0           # for FastAPI test client
+
+# Optional: GDAL Python bindings (for provenance.json gdal_version)
+# GDAL version must match your system GDAL. Install via conda or system package manager.
+# gdal  # do not pin here; match system version

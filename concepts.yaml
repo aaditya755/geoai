@@ -1,0 +1,102 @@
+# GeoLens AI — concept registry
+# Each concept maps a plain-language name to how it should be detected.
+#
+# Fields:
+#   kind        : "instance"  → SkyCLIP vision retrieval
+#               : "osm_only"  → direct OSM vector lookup, no vision
+#   skyclip_text: text prompt sent to SkyCLIP (only for kind=instance)
+#   osm_key     : OSM tag key  (used as fallback or for osm_only)
+#   osm_value   : OSM tag value (use "*" for any value)
+#   description : human-readable description shown in the UI
+#   not_visible_note: set when the concept is too small to detect at ~0.5 m/px
+#
+# HONESTY RULES: never invent OSM keys or column names.
+# If a concept is invisible at SpaceNet resolution, mark not_visible_note.
+# The system returns "not found / too small to see" for those.
+
+swimming_pool:
+  kind: instance
+  skyclip_text: "aerial view of a swimming pool"
+  osm_key: "leisure"
+  osm_value: "swimming_pool"
+  description: "Outdoor or indoor swimming pool visible from aerial imagery"
+
+road:
+  kind: osm_only
+  osm_key: "highway"
+  osm_value: "*"
+  description: "Any road or street in OpenStreetMap"
+
+primary_road:
+  kind: osm_only
+  osm_key: "highway"
+  osm_value: "primary"
+  description: "Primary roads in OpenStreetMap"
+
+residential_road:
+  kind: osm_only
+  osm_key: "highway"
+  osm_value: "residential"
+  description: "Residential streets in OpenStreetMap"
+
+building:
+  kind: instance
+  skyclip_text: "aerial view of a building rooftop"
+  osm_key: "building"
+  osm_value: "*"
+  description: "Building footprint visible from aerial imagery"
+
+park:
+  kind: osm_only
+  osm_key: "leisure"
+  osm_value: "park"
+  description: "Public parks in OpenStreetMap"
+
+green_area:
+  kind: osm_only
+  osm_key: "landuse"
+  osm_value: "grass"
+  description: "Grassy or green land use areas in OpenStreetMap"
+
+school:
+  kind: instance
+  skyclip_text: "aerial view of a school or educational building"
+  osm_key: "amenity"
+  osm_value: "school"
+  description: "Schools and educational facilities"
+
+hospital:
+  kind: instance
+  skyclip_text: "aerial view of a hospital building"
+  osm_key: "amenity"
+  osm_value: "hospital"
+  description: "Hospitals and medical facilities"
+
+parking_lot:
+  kind: instance
+  skyclip_text: "aerial view of a parking lot"
+  osm_key: "amenity"
+  osm_value: "parking"
+  description: "Parking lots and car parks visible from aerial imagery"
+
+# --- Concepts with not_visible_note: too small at ~0.5 m/px SpaceNet resolution ---
+
+solar_panel:
+  kind: instance
+  skyclip_text: "aerial view of solar panels on a rooftop"
+  osm_key: "generator:source"
+  osm_value: "solar"
+  description: "Solar panels on rooftops"
+  not_visible_note: >
+    Solar panels are typically too small to reliably detect at ~0.5 m/px SpaceNet resolution.
+    The system will attempt detection but may return 'not found / too small to see'.
+    OSM fallback will be attempted where data exists.
+
+narrow_drain:
+  kind: osm_only
+  osm_key: "waterway"
+  osm_value: "drain"
+  description: "Narrow drainage channels"
+  not_visible_note: >
+    Narrow drains (< 1 m wide) are below the detection limit at ~0.5 m/px.
+    Returning OSM data only; no vision detection attempted.

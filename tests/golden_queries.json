@@ -1,0 +1,277 @@
+[
+  {
+    "query": "swimming pools within 100 m of a road",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 100.0,
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "swimming pools within 50 m of a road",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 50.0,
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "swimming pools within 200 m of a road",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 200.0,
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "show me all roads",
+    "expected_concept": "road",
+    "expected_kind": "osm_only",
+    "expected_relation_type": null,
+    "expected_distance_m": null,
+    "expected_reference_concept": null
+  },
+  {
+    "query": "top 10 buildings near a park",
+    "expected_concept": "building",
+    "expected_kind": "instance",
+    "expected_limit": 10,
+    "expected_relation_type": "intersects",
+    "expected_reference_concept": "park"
+  },
+  {
+    "query": "buildings within 150 m of a road",
+    "expected_concept": "building",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 150.0,
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "parking lots near a school",
+    "expected_concept": "parking_lot",
+    "expected_kind": "instance",
+    "expected_relation_type": "intersects",
+    "expected_reference_concept": "school"
+  },
+  {
+    "query": "schools within 300 m of a hospital",
+    "expected_concept": "school",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 300.0,
+    "expected_reference_concept": "hospital"
+  },
+  {
+    "query": "only the top 5 results",
+    "expected_limit": 5
+  },
+  {
+    "query": "first 20 buildings",
+    "expected_limit": 20
+  },
+  {
+    "query": "roads within 500 m of a park",
+    "expected_concept": "road",
+    "expected_kind": "osm_only",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 500.0,
+    "expected_reference_concept": "park"
+  },
+  {
+    "query": "buildings intersecting a park",
+    "expected_concept": "building",
+    "expected_kind": "instance",
+    "expected_relation_type": "intersects",
+    "expected_reference_concept": "park"
+  },
+  {
+    "query": "all parks",
+    "expected_concept": "park",
+    "expected_kind": "osm_only"
+  },
+  {
+    "query": "solar panels on rooftops",
+    "expected_concept": "solar_panel",
+    "expected_kind": "instance",
+    "notes": "invisible at 0.5m/px; plan should still be valid; system returns not_found_message"
+  },
+  {
+    "query": "narrow drains near buildings",
+    "expected_concept": "narrow_drain",
+    "expected_kind": "osm_only",
+    "notes": "too small to see; OSM fallback attempted"
+  },
+  {
+    "query": "swimming pools within 75 m of a street",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 75.0,
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "hospitals within 1000 m of a road",
+    "expected_concept": "hospital",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 1000.0,
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "parking lots within 250 m of a road",
+    "expected_concept": "parking_lot",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 250.0,
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "top 15 swimming pools",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance",
+    "expected_limit": 15
+  },
+  {
+    "query": "buildings near a hospital",
+    "expected_concept": "building",
+    "expected_kind": "instance",
+    "expected_relation_type": "intersects",
+    "expected_reference_concept": "hospital"
+  },
+  {
+    "query": "show me schools",
+    "expected_concept": "school",
+    "expected_kind": "instance"
+  },
+  {
+    "query": "show me hospitals",
+    "expected_concept": "hospital",
+    "expected_kind": "instance"
+  },
+  {
+    "query": "buildings within 50 m of a school",
+    "expected_concept": "building",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 50.0,
+    "expected_reference_concept": "school"
+  },
+  {
+    "query": "roads near parks",
+    "expected_concept": "road",
+    "expected_kind": "osm_only",
+    "expected_relation_type": "intersects",
+    "expected_reference_concept": "park"
+  },
+  {
+    "query": "swimming pools within 30 m of a road",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 30.0,
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "parking lots intersecting a road",
+    "expected_concept": "parking_lot",
+    "expected_kind": "instance",
+    "expected_relation_type": "intersects",
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "only the top 3",
+    "expected_limit": 3
+  },
+  {
+    "query": "first 50 buildings",
+    "expected_limit": 50
+  },
+  {
+    "query": "swimming pools",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance"
+  },
+  {
+    "query": "all buildings",
+    "expected_concept": "building",
+    "expected_kind": "instance"
+  },
+  {
+    "query": "pools within 100 metres of a road",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 100.0,
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "buildings within 500 m of a park",
+    "expected_concept": "building",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 500.0,
+    "expected_reference_concept": "park"
+  },
+  {
+    "query": "schools near a road",
+    "expected_concept": "school",
+    "expected_kind": "instance",
+    "expected_relation_type": "intersects",
+    "expected_reference_concept": "road"
+  },
+  {
+    "query": "hospitals near a park",
+    "expected_concept": "hospital",
+    "expected_kind": "instance",
+    "expected_relation_type": "intersects",
+    "expected_reference_concept": "park"
+  },
+  {
+    "query": "top 25 pools near a road",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance",
+    "expected_limit": 25
+  },
+  {
+    "query": "show residential streets",
+    "expected_concept": "residential_road",
+    "expected_kind": "osm_only"
+  },
+  {
+    "query": "show primary roads",
+    "expected_concept": "primary_road",
+    "expected_kind": "osm_only"
+  },
+  {
+    "query": "swimming pools within 400 m of a school",
+    "expected_concept": "swimming_pool",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 400.0,
+    "expected_reference_concept": "school"
+  },
+  {
+    "query": "parking lots within 100 m of a hospital",
+    "expected_concept": "parking_lot",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 100.0,
+    "expected_reference_concept": "hospital"
+  },
+  {
+    "query": "buildings near a school within 200 m",
+    "expected_concept": "building",
+    "expected_kind": "instance",
+    "expected_relation_type": "dwithin",
+    "expected_distance_m": 200.0,
+    "expected_reference_concept": "school"
+  },
+  {
+    "query": "green areas near buildings",
+    "expected_concept": "green_area",
+    "expected_kind": "osm_only",
+    "expected_relation_type": "intersects",
+    "expected_reference_concept": "building"
+  }
+]

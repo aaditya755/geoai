@@ -1,0 +1,79 @@
+/* GeoLens AI — global styles */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-base:       #0B1020;
+  --bg-panel:      #121A33;
+  --bg-card:       #1A2240;
+  --bg-input:      #1E2A45;
+  --border:        #2A3555;
+  --border-bright: #3A4A70;
+
+  --teal:          #2DD4BF;
+  --teal-dim:      #1A8F80;
+  --violet:        #8B5CF6;
+  --violet-dim:    #5B3BB0;
+  --pink:          #E0559A;
+  --pink-dim:      #A03070;
+
+  --text-primary:  #E8EDF8;
+  --text-secondary:#8A9BBF;
+  --text-muted:    #4A5A7A;
+
+  --font: 'Inter', system-ui, sans-serif;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+button {
+  font-family: var(--font);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+input, textarea {
+  font-family: var(--font);
+  outline: none;
+}
+
+a { color: var(--teal); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.sample-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(224, 85, 154, 0.15);
+  border: 1px solid var(--pink-dim);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--pink);
+  letter-spacing: 0.03em;
+}

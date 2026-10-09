@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GeoLens AI Plan",
+  "description": "Schema-validated JSON plan produced by the LLM. The LLM writes ONLY this; no geometric decisions are made by it.",
+  "type": "object",
+  "required": ["target", "relations"],
+  "additionalProperties": false,
+  "properties": {
+    "target": {
+      "type": "object",
+      "required": ["concept", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "concept": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["instance", "osm_only"]
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_area_m2": {
+              "type": ["number", "null"],
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "reference_concept"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["dwithin", "intersects", "negate"]
+          },
+          "reference_concept": {
+            "type": "string",
+            "minLength": 1
+          },
+          "distance_m": {
+            "type": ["number", "null"],
+            "minimum": 0
+          },
+          "negate": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "limit": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "session_id": {
+      "type": ["string", "null"]
+    }
+  }
+}

@@ -1,0 +1,91 @@
+.plan-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0 4px;
+  font-size: 12px;
+}
+
+.plan-chips-sep {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.plan-chips-ref {
+  padding: 3px 8px;
+  background: var(--bg-input);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.plan-chips-kind-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--violet);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.plan-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.plan-chip:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.plan-chip-teal {
+  background: rgba(45, 212, 191, 0.12);
+  border-color: var(--teal-dim);
+  color: var(--teal);
+}
+
+.plan-chip-violet {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: var(--violet-dim);
+  color: var(--violet);
+}
+
+.plan-chip-pink {
+  background: rgba(224, 85, 154, 0.12);
+  border-color: var(--pink-dim);
+  color: var(--pink);
+}
+
+.plan-chip-label {
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+.plan-chip-edit-icon {
+  font-size: 10px;
+  opacity: 0.4;
+  margin-left: 2px;
+}
+
+.plan-chip-input {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  min-width: 40px;
+  width: 80px;
+}
