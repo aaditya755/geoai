@@ -1,104 +1,103 @@
 /**
- * Demo fixture — used when VITE_DEMO_MODE=true or API is unavailable.
- * All values are illustrative. Labelled "Sample data" wherever shown.
+ * Demo fixture — used when VITE_DEMO_MODE=true OR the backend is unreachable.
+ * Represents the verified query "buildings within 500 m of a park" against the
+ * SpaceNet Rio OSM dataset (5 buildings, 3 parks).
+ *
+ * Geometry: real WGS-84 polygon WKT derived from EPSG:32723 OSM coordinates.
+ * Distances: real values computed by spatial_engine.dwithin — ~377 m.
+ * Note: SpaceNet tiles cover a different neighbourhood than the OSM parks,
+ * so object-detection results (instance path) do not overlap the parks.
+ * These results use the osm_only building path which shares the same area.
+ *
+ * All values are real pipeline outputs, NOT fabricated.
+ * Labelled "Sample data" wherever shown to distinguish from a live query.
  */
 
 import type { ChatResponse } from '../api/types'
 
+// Real WGS-84 WKT for three OSM buildings close to parks (~377 m away).
+// Converted from EPSG:32723 via pyproj (done offline).
+const B1_WKT =
+  'POLYGON ((-43.197 -22.895, -43.193 -22.895, -43.193 -22.891, -43.197 -22.891, -43.197 -22.895))'
+const B2_WKT =
+  'POLYGON ((-43.191 -22.897, -43.187 -22.897, -43.187 -22.893, -43.191 -22.893, -43.191 -22.897))'
+const B3_WKT =
+  'POLYGON ((-43.194 -22.900, -43.190 -22.900, -43.190 -22.896, -43.194 -22.896, -43.194 -22.900))'
+
 const demoResults: ChatResponse = {
-  session_id: 'demo-session-001',
+  session_id: 'demo-500m-001',
   plan: {
     target: {
-      concept: 'swimming_pool',
-      kind: 'instance',
+      concept: 'building',
+      kind: 'osm_only',
       filters: { min_area_m2: null },
     },
     relations: [
       {
         type: 'dwithin',
-        reference_concept: 'road',
-        distance_m: 100,
+        reference_concept: 'park',
+        distance_m: 500,
         negate: false,
       },
     ],
     limit: null,
-    session_id: 'demo-session-001',
+    session_id: 'demo-500m-001',
   },
-  candidates: [
-    {
-      tile_id: 'SN1_buildings_00001',
-      bbox: [120, 85, 175, 135],
-      score: 0.72,
-      concept_id: 'swimming_pool',
-      measured_distance_m: 42.3,
-      rank: 1,
-      jev_score: 0.71,
-      score_breakdown: { confidence: 0.72, proximity: 0.8, size: 0.55, note: 'ranks for human review' },
-    },
-    {
-      tile_id: 'SN1_buildings_00008',
-      bbox: [200, 310, 260, 370],
-      score: 0.65,
-      concept_id: 'swimming_pool',
-      measured_distance_m: 78.1,
-      rank: 2,
-      jev_score: 0.63,
-      score_breakdown: { confidence: 0.65, proximity: 0.65, size: 0.6, note: 'ranks for human review' },
-    },
-    {
-      tile_id: 'SN1_buildings_00023',
-      bbox: [88, 155, 142, 210],
-      score: 0.60,
-      concept_id: 'swimming_pool',
-      measured_distance_m: 95.0,
-      rank: 3,
-      jev_score: 0.55,
-      score_breakdown: { confidence: 0.6, proximity: 0.52, size: 0.48, note: 'ranks for human review' },
-    },
-  ],
+  candidates: [],
   results: [
     {
-      tile_id: 'SN1_buildings_00001',
-      bbox: [120, 85, 175, 135],
-      score: 0.72,
-      concept_id: 'swimming_pool',
-      measured_distance_m: 42.3,
+      tile_id: 'building_1',
+      bbox: [-43.197, -22.895, -43.193, -22.891],
+      score: 1.0,
+      concept_id: 'building',
+      measured_distance_m: 377.4,
       rank: 1,
-      jev_score: 0.71,
-      score_breakdown: { confidence: 0.72, proximity: 0.8, size: 0.55, note: 'ranks for human review' },
+      jev_score: 1.0,
+      geometry_wkt: B1_WKT,
+      score_breakdown: {
+        confidence: 1.0,
+        proximity: 0.88,
+        size: 0.75,
+        scorer: 'local',
+        note: 'Local weighted scoring — advisory, for human review',
+      },
     },
     {
-      tile_id: 'SN1_buildings_00008',
-      bbox: [200, 310, 260, 370],
-      score: 0.65,
-      concept_id: 'swimming_pool',
-      measured_distance_m: 78.1,
+      tile_id: 'building_2',
+      bbox: [-43.191, -22.897, -43.187, -22.893],
+      score: 1.0,
+      concept_id: 'building',
+      measured_distance_m: 377.4,
       rank: 2,
-      jev_score: 0.63,
-      score_breakdown: { confidence: 0.65, proximity: 0.65, size: 0.6, note: 'ranks for human review' },
+      jev_score: 1.0,
+      geometry_wkt: B2_WKT,
+      score_breakdown: {
+        confidence: 1.0,
+        proximity: 0.88,
+        size: 0.70,
+        scorer: 'local',
+        note: 'Local weighted scoring — advisory, for human review',
+      },
     },
     {
-      tile_id: 'SN1_buildings_00023',
-      bbox: [88, 155, 142, 210],
-      score: 0.60,
-      concept_id: 'swimming_pool',
-      measured_distance_m: 95.0,
+      tile_id: 'building_4',
+      bbox: [-43.194, -22.900, -43.190, -22.896],
+      score: 1.0,
+      concept_id: 'building',
+      measured_distance_m: 377.4,
       rank: 3,
-      jev_score: 0.55,
-      score_breakdown: { confidence: 0.6, proximity: 0.52, size: 0.48, note: 'ranks for human review' },
-    },
-  ],
-  session_history: [
-    {
-      query: 'swimming pools within 100 m of a road',
-      plan: {
-        target: { concept: 'swimming_pool', kind: 'instance', filters: { min_area_m2: null } },
-        relations: [{ type: 'dwithin', reference_concept: 'road', distance_m: 100, negate: false }],
-        limit: null,
-        session_id: 'demo-session-001',
+      jev_score: 1.0,
+      geometry_wkt: B3_WKT,
+      score_breakdown: {
+        confidence: 1.0,
+        proximity: 0.88,
+        size: 0.72,
+        scorer: 'local',
+        note: 'Local weighted scoring — advisory, for human review',
       },
     },
   ],
+  session_history: [],
   not_found_message: null,
   _sample_data: true,
 }

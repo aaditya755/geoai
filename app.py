@@ -95,8 +95,28 @@ async def _startup() -> None:
         if path.exists():
             try:
                 gdf = gpd.read_parquet(path)
-                _osm_layers[name] = gdf
-                print(f"[app] Loaded OSM layer '{name}': {len(gdf)} features")
+
+                # When the file mixes buildings and parks, split them cleanly.
+                if name == "building":
+                    # Extract parks first (leisure=park rows have building=NaN).
+                    if "leisure" in gdf.columns:
+                        park_features = gdf[gdf["leisure"] == "park"].copy()
+                        if not park_features.empty:
+                            _osm_layers["park"] = park_features
+                            print(f"[app] Extracted OSM layer 'park': {len(park_features)} features")
+                    
+                    # Filter to actual buildings only (non-null building tag).
+                    if "building" in gdf.columns:
+                        building_features = gdf[gdf["building"].notna()].copy()
+                        _osm_layers[name] = building_features
+                        print(f"[app] Loaded OSM layer '{name}': {len(building_features)} features")
+                    else:
+                        _osm_layers[name] = gdf
+                        print(f"[app] Loaded OSM layer '{name}': {len(gdf)} features")
+                else:
+                    _osm_layers[name] = gdf
+                    print(f"[app] Loaded OSM layer '{name}': {len(gdf)} features")
+                        
             except Exception as e:
                 print(f"[app] WARNING: failed to load OSM layer '{name}' from {path}: {e}")
         else:

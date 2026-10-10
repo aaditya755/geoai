@@ -93,7 +93,7 @@ def dwithin(
     ref_union = reference.geometry.union_all()
 
     distances = candidates.geometry.apply(
-        lambda geom: geom.distance(ref_union) if not geom.is_empty else math.nan
+        lambda geom: geom.distance(ref_union) if geom is not None and not geom.is_empty else math.nan
     )
 
     mask = distances <= distance_m
@@ -130,7 +130,7 @@ def intersects(
     ref_union = reference.geometry.union_all()
 
     mask = candidates.geometry.apply(
-        lambda geom: geom.intersects(ref_union) and not geom.is_empty
+        lambda geom: geom is not None and geom.intersects(ref_union) and not geom.is_empty
     )
 
     result = candidates[mask].copy()

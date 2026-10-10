@@ -56,3 +56,53 @@ desktop.ini
 *.pt
 *.bin
 *.safetensors
+
+# Secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Datasets and geospatial data
+data/
+datasets/
+*.tif
+*.tiff
+*.geotiff
+*.gpkg
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.parquet
+*.geojson
+*.pbf
+
+# Model weights and indexes
+checkpoints/
+weights/
+models/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+*.faiss
+*.index
+
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+node_modules/
+dist/

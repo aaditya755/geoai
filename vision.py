@@ -131,7 +131,8 @@ def _ground_instance(
     top_k: int = DEFAULT_TOP_K,
 ) -> Tuple[gpd.GeoDataFrame, Optional[str]]:
     """
-    Retrieve top-K tiles from FAISS using SkyCLIP text embedding.
+    Retrieve top-K tiles from FAISS using SkyCLIP text embedding,
+    then perform object detection on retrieved tiles.
 
     Returns (GeoDataFrame, not_found_message).
     """
@@ -145,6 +146,7 @@ def _ground_instance(
         )
 
     from skyclip_loader import embed_text, get_device, load_skyclip
+    from object_detector import detect_objects_in_tiles
 
     concept_def = concepts_registry.get(concept)
     if concept_def is None:
@@ -175,55 +177,60 @@ def _ground_instance(
     query_vec = embed_text(model, tokenizer, skyclip_text, device=device)
     query_vec = query_vec.astype("float32").reshape(1, -1)
 
-    # FAISS search
+    # FAISS search to get top-K tiles
     k = min(top_k, index.ntotal)
     scores, indices = index.search(query_vec, k)
 
     scores = scores[0]
     indices = indices[0]
 
-    rows = []
+    # Get tile IDs for object detection
+    retrieved_tile_ids = []
     for score, idx in zip(scores, indices):
-        if idx < 0:
-            continue
-        tile_id = tile_ids[idx]
-        # Look up tile footprint geometry
-        fp_rows = tile_footprints[tile_footprints["tile_id"] == tile_id]
-        if fp_rows.empty:
-            geom = None
-            bbox = [0.0, 0.0, 0.0, 0.0]
-        else:
-            geom = fp_rows.geometry.iloc[0]
-            bounds = geom.bounds
-            bbox = [bounds[0], bounds[1], bounds[2], bounds[3]]
-
-        rows.append({
-            "tile_id": tile_id,
-            "bbox": bbox,
-            "score": float(score),
-            "concept_id": concept,
-            "geometry": geom,
-            "measured_distance_m": float("nan"),
-            "rank": 0,
-        })
-
-    if not rows:
+        if idx >= 0 and score > 0.1:  # Filter very low similarity scores
+            tile_id = tile_ids[idx]
+            retrieved_tile_ids.append(tile_id)
+    
+    if not retrieved_tile_ids:
         msg = (
-            f"No candidates found for concept '{concept}' "
+            f"No relevant tiles found for concept '{concept}' "
             f"(skyclip_text={skyclip_text!r}). "
         )
         if not_visible:
             msg = f"[too small to see at this resolution] {not_visible.strip()}"
         return gpd.GeoDataFrame(), msg
 
-    gdf = gpd.GeoDataFrame(rows, crs=WGS84)
-    gdf = gdf.to_crs(RIO_CRS)
+    # Perform object detection on retrieved tiles
+    print(f"[vision] Running object detection on {len(retrieved_tile_ids)} tiles for '{concept}'")
+    detected_objects = detect_objects_in_tiles(retrieved_tile_ids, concept)
+    
+    if detected_objects.empty:
+        msg = f"No {concept} objects detected in {len(retrieved_tile_ids)} retrieved tiles."
+        if not_visible:
+            msg = f"[visibility note] {not_visible.strip()} No objects detected in retrieved tiles."
+        return gpd.GeoDataFrame(), msg
+
+    # Ensure output has correct CRS and columns
+    if detected_objects.crs != RIO_CRS:
+        detected_objects = detected_objects.to_crs(RIO_CRS)
+    
+    # Add required columns if missing
+    required_cols = ['tile_id', 'bbox', 'score', 'concept_id', 'measured_distance_m', 'rank']
+    for col in required_cols:
+        if col not in detected_objects.columns:
+            if col == 'measured_distance_m':
+                detected_objects[col] = float('nan')
+            elif col == 'rank':
+                detected_objects[col] = 0
+            else:
+                detected_objects[col] = ""
 
     not_found_msg = None
     if not_visible:
         not_found_msg = f"[visibility note] {not_visible.strip()} Results may be unreliable."
 
-    return gdf, not_found_msg
+    print(f"[vision] Detected {len(detected_objects)} {concept} objects")
+    return detected_objects, not_found_msg
 
 
 # ---------------------------------------------------------------------------

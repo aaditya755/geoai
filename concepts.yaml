@@ -52,6 +52,12 @@ park:
   osm_value: "park"
   description: "Public parks in OpenStreetMap"
 
+parks:
+  kind: osm_only
+  osm_key: "leisure"
+  osm_value: "park"
+  description: "Public parks in OpenStreetMap (plural form)"
+
 green_area:
   kind: osm_only
   osm_key: "landuse"
@@ -100,3 +106,10 @@ narrow_drain:
   not_visible_note: >
     Narrow drains (< 1 m wide) are below the detection limit at ~0.5 m/px.
     Returning OSM data only; no vision detection attempted.
+
+"swimming pool":
+  kind: instance
+  skyclip_text: "aerial view of a swimming pool"
+  osm_key: "leisure"
+  osm_value: "swimming_pool"
+  description: "Outdoor or indoor swimming pool visible from aerial imagery"

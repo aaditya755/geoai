@@ -4,15 +4,15 @@ import 'leaflet/dist/leaflet.css'
 import type { Result } from '../api/types'
 import './MapPanel.css'
 
-// Fix for default markers not showing in Leaflet with bundlers
+// Fix Leaflet default icon URLs when bundled
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconUrl:       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-// Rio de Janeiro centre
+// Rio de Janeiro centre — default view
 const RIO_CENTER: [number, number] = [-22.9068, -43.1729]
 const DEFAULT_ZOOM = 13
 
@@ -23,190 +23,197 @@ interface Props {
   sampleData: boolean
 }
 
+// ── Geometry helpers ────────────────────────────────────────────────────────
+
 /**
- * Map panel using Leaflet.
- * Shows glowing markers and dashed bounding boxes for results.
- * Draws a buffer ring at distance_m radius when a result is selected.
+ * Try to extract [lat, lng] centroid from a result.
+ * Prefers geometry_wkt → bbox (treated as WGS-84 lon/lat).
  */
+function resultCentroid(r: Result): [number, number] | null {
+  // 1. geometry_wkt: POLYGON ((lon lat, ...))
+  if (r.geometry_wkt) {
+    const match = r.geometry_wkt.match(/POLYGON\s*\(\(([^)]+)\)\)/)
+    if (match) {
+      const pairs = match[1].split(',').map(p => {
+        const [x, y] = p.trim().split(/\s+/).map(Number)
+        return [x, y] as [number, number]
+      })
+      if (pairs.length) {
+        const avgLon = pairs.reduce((s, p) => s + p[0], 0) / pairs.length
+        const avgLat = pairs.reduce((s, p) => s + p[1], 0) / pairs.length
+        return [avgLat, avgLon]  // Leaflet wants [lat, lng]
+      }
+    }
+  }
+  // 2. bbox [minx, miny, maxx, maxy] in WGS-84
+  if (r.bbox?.length === 4) {
+    const [minx, miny, maxx, maxy] = r.bbox
+    // Treat as WGS-84 only if values look like lon/lat (roughly -180..180)
+    if (Math.abs(minx) <= 180 && Math.abs(miny) <= 90) {
+      return [(miny + maxy) / 2, (minx + maxx) / 2]
+    }
+  }
+  return null
+}
+
+/** Parse polygon WKT into a Leaflet LatLng array, or null on failure. */
+function wktToLatLngs(wkt: string): L.LatLng[] | null {
+  const match = wkt.match(/POLYGON\s*\(\(([^)]+)\)\)/)
+  if (!match) return null
+  return match[1].split(',').map(p => {
+    const [x, y] = p.trim().split(/\s+/).map(Number)
+    return L.latLng(y, x)  // WKT is (lon lat), Leaflet is (lat, lng)
+  })
+}
+
+/** Build Leaflet bounds from a bbox [minx, miny, maxx, maxy] in WGS-84. */
+function bboxToBounds(bbox: number[]): L.LatLngBounds | null {
+  if (bbox.length !== 4) return null
+  const [minx, miny, maxx, maxy] = bbox
+  if (Math.abs(minx) > 180 || Math.abs(miny) > 90) return null
+  return L.latLngBounds([[miny, minx], [maxy, maxx]])
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+
 export default function MapPanel({ results, selectedIdx, onSelectResult, sampleData }: Props) {
-  const mapContainerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<any>(null)
-  const markersRef = useRef<any[]>([])
-  const boxesRef = useRef<any[]>([])
-  const bufferRef = useRef<any>(null)
+  const containerRef  = useRef<HTMLDivElement>(null)
+  const mapRef        = useRef<L.Map | null>(null)
+  const layersRef     = useRef<L.Layer[]>([])
   const [mapError, setMapError] = useState<string | null>(null)
 
-  // Initialize map
+  // ── Init map ────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return
+    if (!containerRef.current || mapRef.current) return
 
     try {
-      console.log('Initializing Leaflet map...')
-      
-      // Set a minimum height for the map container
-      if (mapContainerRef.current) {
-        mapContainerRef.current.style.height = '100%'
-        mapContainerRef.current.style.minHeight = '400px'
-      }
-      
-      const map = L.map(mapContainerRef.current, {
+      const map = L.map(containerRef.current, {
         center: RIO_CENTER,
         zoom: DEFAULT_ZOOM,
         zoomControl: true,
-        preferCanvas: false,
         scrollWheelZoom: true,
-        doubleClickZoom: true,
-        boxZoom: true,
-        keyboard: true,
       })
 
-      // Use simple OpenStreetMap tiles (most reliable)
-      const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
-        minZoom: 1,
-      })
-
-      tileLayer.on('tileerror', (e: any) => {
-        console.warn('Tile loading error:', e)
-      })
-
-      tileLayer.on('tileload', () => {
-        console.log('Map tiles loaded successfully')
-      })
-
-      tileLayer.addTo(map)
-
-      // Add a test marker to verify map is working
-      const testMarker = L.marker(RIO_CENTER)
-        .addTo(map)
-        .bindPopup('🗺️ Rio de Janeiro<br><small>Map is working!</small>')
-        .openPopup()
+      }).addTo(map)
 
       mapRef.current = map
-      console.log('Map initialized successfully')
-      setMapError(null)
-
-      // Force map to resize after a short delay
-      setTimeout(() => {
-        map.invalidateSize()
-      }, 100)
-
-    } catch (error) {
-      console.error('Failed to initialize map:', error)
+      setTimeout(() => map.invalidateSize(), 100)
+    } catch (err) {
+      console.error('Map init error:', err)
       setMapError('Failed to load map. Please refresh the page.')
     }
 
     return () => {
-      if (mapRef.current) {
-        try {
-          mapRef.current.remove()
-          mapRef.current = null
-        } catch (error) {
-          console.warn('Error cleaning up map:', error)
-        }
-      }
+      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null }
     }
   }, [])
 
-  // Render results as markers + bboxes
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !results.length) return
-
-    try {
-      // Clear previous markers
-      markersRef.current.forEach(m => {
-        if (map.hasLayer(m)) map.removeLayer(m)
-      })
-      boxesRef.current.forEach(b => {
-        if (map.hasLayer(b)) map.removeLayer(b)
-      })
-      markersRef.current = []
-      boxesRef.current = []
-
-      results.forEach((r, i) => {
-        const isSelected = i === selectedIdx
-
-        // For demo: place markers at approximate positions offset from RIO_CENTER
-        const lat = RIO_CENTER[0] + (i * 0.002) - 0.003
-        const lng = RIO_CENTER[1] + (i * 0.003) - 0.004
-
-        // Glowing marker
-        const markerIcon = L.divIcon({
-          className: '',
-          html: `<div class="map-marker ${isSelected ? 'selected' : ''}" title="${r.concept_id} | score: ${r.score.toFixed(2)}"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7],
-        })
-
-        const marker = L.marker([lat, lng], { icon: markerIcon })
-          .addTo(map)
-          .on('click', () => onSelectResult(i))
-
-        markersRef.current.push(marker)
-
-        // Dashed bounding box
-        const bboxBounds: [[number, number], [number, number]] = [
-          [lat - 0.0008, lng - 0.0010],
-          [lat + 0.0008, lng + 0.0010],
-        ]
-        const box = L.rectangle(bboxBounds, {
-          color: isSelected ? '#2DD4BF' : '#8B5CF6',
-          weight: isSelected ? 2 : 1,
-          dashArray: '5, 4',
-          fill: false,
-          opacity: isSelected ? 0.9 : 0.5,
-        }).addTo(map)
-        boxesRef.current.push(box)
-      })
-    } catch (error) {
-      console.error('Error rendering map markers:', error)
-    }
-  }, [results, selectedIdx, onSelectResult])
-
-  // Buffer ring on selected result
+  // ── Render result layers ────────────────────────────────────────────────
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
 
-    try {
-      if (bufferRef.current) {
-        if (map.hasLayer(bufferRef.current)) {
-          map.removeLayer(bufferRef.current)
+    // Remove previous result layers
+    layersRef.current.forEach(l => map.removeLayer(l))
+    layersRef.current = []
+
+    if (!results.length) return
+
+    const allBounds: L.LatLngBounds[] = []
+
+    results.forEach((r, i) => {
+      const selected = i === selectedIdx
+      const color    = selected ? '#2DD4BF' : '#8B5CF6'
+      const weight   = selected ? 2.5 : 1.5
+
+      // ── Polygon from WKT ────────────────────────────────────────────────
+      if (r.geometry_wkt) {
+        const latlngs = wktToLatLngs(r.geometry_wkt)
+        if (latlngs && latlngs.length >= 3) {
+          const poly = L.polygon(latlngs, {
+            color,
+            weight,
+            fillColor: color,
+            fillOpacity: selected ? 0.3 : 0.1,
+            dashArray: selected ? undefined : '5,4',
+          })
+            .addTo(map)
+            .on('click', () => onSelectResult(i))
+
+          const popupText = [
+            `<b>${r.concept_id}</b>`,
+            `Rank #${r.rank}`,
+            isFinite(r.measured_distance_m) ? `Distance: ${Math.round(r.measured_distance_m)} m` : null,
+            `Score: ${(r.score * 100).toFixed(0)}%`,
+          ].filter(Boolean).join('<br>')
+          poly.bindPopup(popupText)
+
+          layersRef.current.push(poly)
+          allBounds.push(poly.getBounds())
         }
-        bufferRef.current = null
       }
 
-      if (selectedIdx === null || !results[selectedIdx]) return
+      // ── Fallback: rectangle from bbox ───────────────────────────────────
+      if (!r.geometry_wkt && r.bbox) {
+        const bounds = bboxToBounds(r.bbox)
+        if (bounds) {
+          const rect = L.rectangle(bounds, {
+            color,
+            weight,
+            fillColor: color,
+            fillOpacity: selected ? 0.3 : 0.1,
+            dashArray: selected ? undefined : '5,4',
+          })
+            .addTo(map)
+            .on('click', () => onSelectResult(i))
+          layersRef.current.push(rect)
+          allBounds.push(bounds)
+        }
+      }
 
-      const r = results[selectedIdx]
-      const lat = RIO_CENTER[0] + (selectedIdx * 0.002) - 0.003
-      const lng = RIO_CENTER[1] + (selectedIdx * 0.003) - 0.004
-      const distM = isNaN(r.measured_distance_m) ? 0 : r.measured_distance_m
+      // ── Marker at centroid ──────────────────────────────────────────────
+      const centroid = resultCentroid(r)
+      if (centroid) {
+        const markerHtml = `<div class="map-marker ${selected ? 'selected' : ''}" title="${r.concept_id}"></div>`
+        const icon = L.divIcon({ className: '', html: markerHtml, iconSize: [14, 14], iconAnchor: [7, 7] })
+        const marker = L.marker(centroid, { icon })
+          .addTo(map)
+          .on('click', () => onSelectResult(i))
+        layersRef.current.push(marker)
+      }
 
-      if (distM > 0) {
-        bufferRef.current = L.circle([lat, lng], {
-          radius: distM,
+      // ── Buffer ring on selected ─────────────────────────────────────────
+      if (selected && centroid && isFinite(r.measured_distance_m) && r.measured_distance_m > 0) {
+        const ring = L.circle(centroid, {
+          radius: r.measured_distance_m,
           color: '#2DD4BF',
           weight: 1.5,
-          dashArray: '8, 5',
+          dashArray: '8,5',
           fill: false,
           opacity: 0.5,
         }).addTo(map)
+        layersRef.current.push(ring)
       }
-    } catch (error) {
-      console.error('Error rendering buffer ring:', error)
-    }
-  }, [selectedIdx, results])
+    })
 
+    // Fit map to all results (only when results change, not on selection change)
+    if (allBounds.length) {
+      const union = allBounds.reduce((acc, b) => acc.extend(b), L.latLngBounds(allBounds[0]))
+      map.fitBounds(union, { padding: [40, 40], maxZoom: 16 })
+    }
+  }, [results, selectedIdx, onSelectResult])
+
+  // ── Error state ─────────────────────────────────────────────────────────
   if (mapError) {
     return (
       <div className="map-panel">
         <div className="map-error">
           <h3>Map Error</h3>
           <p>{mapError}</p>
-          <button onClick={() => window.location.reload()}>Reload Page</button>
+          <button onClick={() => window.location.reload()}>Reload</button>
         </div>
       </div>
     )
@@ -216,10 +223,10 @@ export default function MapPanel({ results, selectedIdx, onSelectResult, sampleD
     <div className="map-panel">
       {sampleData && (
         <div className="map-sample-overlay" aria-label="Sample data notice">
-          <span className="sample-badge">Sample data — positions are illustrative</span>
+          <span className="sample-badge">Sample data</span>
         </div>
       )}
-      <div ref={mapContainerRef} className="map-container" aria-label="Results map" />
+      <div ref={containerRef} className="map-container" aria-label="Results map" />
     </div>
   )
 }

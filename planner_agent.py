@@ -92,7 +92,7 @@ Your job is to convert a natural language query about aerial imagery into a JSON
 Rules:
 - Write ONLY valid JSON matching the schema. No prose, no explanation, no markdown fences.
 - Use "osm_only" for roads, parks, rivers, named areas.
-- Use "instance" for visually detectable objects (pools, buildings, parking lots, schools, hospitals).
+- Use "instance" for visually detectable objects (pools, buildings, parking lots, schools, hospitals, solar panels).
 - For "within X metres of Y": type = "dwithin", distance_m = X (number).
 - For "intersecting Y" or "near Y": type = "intersects".
 - Unsupported/invisible concepts (solar panels, narrow drains): produce a valid plan; the system reports "not found".
